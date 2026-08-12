@@ -47,13 +47,13 @@ public class BasePage {
     }
 
     protected void checkToCheckboxRadio(String locator) {
-        if(!getElement(locator).isSelected()) {
+        if (!getElement(locator).isSelected()) {
             getElement(locator).click();
         }
     }
 
     protected void uncheckToCheckboxRadio(String locator) {
-        if(getElement(locator).isSelected()) {
+        if (getElement(locator).isSelected()) {
             getElement(locator).click();
         }
     }
@@ -71,7 +71,7 @@ public class BasePage {
         sleepInSeconds(2);
 
         WebDriverWait explicitWait = new WebDriverWait(driver, Duration.ofSeconds(15));
-        List<WebElement> allItems = explicitWait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.xpath(childItemLocator)));
+        List<WebElement> allItems = explicitWait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(getByLocator(childItemLocator)));
 
         sleepInSeconds(2);
         for (WebElement item : allItems) {
@@ -186,27 +186,27 @@ public class BasePage {
         driver.switchTo().defaultContent();
     }
 
-    protected void hoverToElement( String locator) {
+    protected void hoverToElement(String locator) {
         new Actions(driver).moveToElement(getElement(locator)).perform();
     }
 
-    protected void clickAndHoldToElement( String locator) {
+    protected void clickAndHoldToElement(String locator) {
         new Actions(driver).clickAndHold(getElement(locator)).perform();
     }
 
-    protected void doubleClickToElement( String locator) {
+    protected void doubleClickToElement(String locator) {
         new Actions(driver).doubleClick(getElement(locator)).perform();
     }
 
-    protected void rightClickToElement( String locator) {
+    protected void rightClickToElement(String locator) {
         new Actions(driver).contextClick(getElement(locator)).perform();
     }
 
-    protected void dragAndDropElement( String srcLocator, String tgtLocator) {
+    protected void dragAndDropElement(String srcLocator, String tgtLocator) {
         new Actions(driver).dragAndDrop(getElement(srcLocator), getElement(tgtLocator)).perform();
     }
 
-    protected void pressKeyToElement( String locator, String key) {
+    protected void pressKeyToElement(String locator, String key) {
         new Actions(driver).sendKeys(getElement(locator), key).perform();
     }
 
@@ -269,33 +269,48 @@ public class BasePage {
     }
 
     protected void waitForElementVisible(String locator) {
-        new WebDriverWait(driver, Duration.ofSeconds(30)).until(ExpectedConditions.visibilityOfElementLocated(getByXpath(locator)));
+        new WebDriverWait(driver, Duration.ofSeconds(30)).until(ExpectedConditions.visibilityOfElementLocated(getByLocator(locator)));
     }
 
     protected void waitForElementPresence(String locator) {
-        new WebDriverWait(driver, Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfAllElementsLocatedBy(getByXpath(locator)));
+        new WebDriverWait(driver, Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfAllElementsLocatedBy(getByLocator(locator)));
     }
 
     protected void waitForElementInvisible(String locator) {
-        new WebDriverWait(driver, Duration.ofSeconds(30)).until(ExpectedConditions.invisibilityOfElementLocated(getByXpath(locator)));
+        new WebDriverWait(driver, Duration.ofSeconds(30)).until(ExpectedConditions.invisibilityOfElementLocated(getByLocator(locator)));
     }
 
     protected void waitForElementClickable(String locator) {
-        new WebDriverWait(driver, Duration.ofSeconds(30)).until(ExpectedConditions.elementToBeClickable(getByXpath(locator)));
+        new WebDriverWait(driver, Duration.ofSeconds(30)).until(ExpectedConditions.elementToBeClickable(getByLocator(locator)));
     }
 
     protected WebElement getElement(String locator) {
-        return driver.findElement(By.xpath(locator));
+        return driver.findElement(getByLocator(locator));
     }
 
     protected List<WebElement> getListElement(String locator) {
-        return driver.findElements(By.xpath(locator));
+        return driver.findElements(getByLocator(locator));
     }
 
-    public By getByXpath(String locator) {
-        return By.xpath(locator);
-    }
+    private By getByLocator(String locatorType) {
+        if (locatorType == null || locatorType.trim().isEmpty()) {
+            throw new IllegalArgumentException("Locator type cannot be null or empty.");
+        }
 
+        String[] locatorArr = locatorType.split("=", 2);
+        String locatorPrefix = locatorArr[0].trim();
+        String locatorValue = locatorArr[1].trim();
+
+        return switch (locatorPrefix.toUpperCase()) {
+            case "ID" -> By.id(locatorValue);
+            case "CLASS" -> By.className(locatorValue);
+            case "NAME" -> By.name(locatorValue);
+            case "CSS" -> By.cssSelector(locatorValue);
+            case "XPATH" -> By.xpath(locatorValue);
+            default -> throw new IllegalArgumentException("Locator type is not supported: " + locatorType);
+        };
+    }
+    
     protected void sleepInSeconds(int timeInSeconds) {
         try {
             Thread.sleep(timeInSeconds * 1000L);
